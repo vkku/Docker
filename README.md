@@ -53,3 +53,4 @@ docker run -d --rm --name balance_game -p 18081:80 vkku/balance_game:latest
 ```
 
 Layering and Imaging on each of ```DockerFile``` statements
+```tar -tvf export.zip```
