@@ -50,6 +50,7 @@ docker search vkku
 
 ```
 docker run -d --rm --name balance_game -p 18081:80 vkku/balance_game:latest
+-ti : for interactive machine
 ```
 
 Layering and Imaging on each of ```DockerFile``` statements
