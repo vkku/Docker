@@ -28,3 +28,11 @@ https://gist.github.com/spkane/98ac0c87a019f9305c831966e4d5f0b8
 docker-machine ip
 usually 192.168.99.100
 ```
+```
+$ docker system prune -a
+WARNING! This will remove:
+  - all stopped containers
+  - all networks not used by at least one container
+  - all images without at least one container associated to them
+  - all build cache
+```
