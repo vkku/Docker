@@ -36,3 +36,9 @@ WARNING! This will remove:
   - all images without at least one container associated to them
   - all build cache
 ```
+
+```
+You can push a new image to this repository using the CLI
+docker tag local-image:tagname new-repo:tagname
+docker push new-repo:tagname
+```
