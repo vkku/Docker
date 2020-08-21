@@ -47,3 +47,7 @@ docker build -t vkku/balance_game .
 docker push vkku/balance_game:latest
 docker search vkku
 ```
+
+```
+docker run -d --rm --name balance_game -p 18081:80 vkku/balance_game:latest
+```
