@@ -22,3 +22,4 @@ wget https://raw.githubusercontent.com/spkane/train-os/master/tcpdump.json # opt
 alt to prev
 wget https://raw.githubusercontent.com/spkane/train-os/master/tcpdump.json
 ```
+https://gist.github.com/spkane/98ac0c87a019f9305c831966e4d5f0b8
