@@ -62,6 +62,10 @@ docker tag [image_identifier]
 docker history [tag]
 
 ```
+
+```
+
+```
 ---
 
 # A Note for Windows Users
@@ -510,5 +514,376 @@ https://github.com/docker/distribution
 
 * Docker: Up and Running
   * http://shop.oreilly.com/product/0636920153566.do
+
+---
+# The Slow Rise Of Linux Containers
+
+* **chroot system call** (*1979*)
+  * Version 7 Unix
+* **jail** (*2000*)
+  * FreeBSD 4.0
+* **Solaris Zones** (*2004*)
+  * Solaris 10
+* **Linux Containers - LXC** (*2008*)
+  * version 2.6.24 of the Linux kernel
+
+   ---
+
+# The Quick Rise of Docker
+
+* Docker Engine - Announced March 15, 2013
+
+* **Provided**:
+  * Application packaging
+    * App & dependencies packed together
+    * Single deployment artifact
+  * Abstract software from hardware without sacrificing resources
+
+---
+
+# Docker Engine isn’t a…
+
+* virtualization platform (VMware, KVM, etc.)
+* cloud platform (AWS, Azure, etc.)
+* configuration management tool (Chef, Puppet, etc.)
+* deployment framework (Capistrano, etc.)
+* workload management tool (Mesos, Kubernetes, etc.)
+* development environment (Vagrant, etc.)
+
+---
+
+# Testing the Docker Setup
+
+```shell
+$ docker image ls
+$ docker container run -d --rm --name quantum \
+    --publish mode=ingress,target=8080,published=18080 \
+    spkane/quantum-game:latest
+$ docker container ls
+```
+
+* In a web browser, navigate to port 18080 on your Docker server.
+
+```shell
+$ docker container stop quantum
+$ docker container ls
+$ docker container ls -a
+```
+
+---
+
+# Network Ports
+
+```shell
+$ docker container run -d --rm --name quantum \
+    --publish mode=ingress,target=8080,published=18090 \
+    spkane/quantum-game:latest
+```
+
+* In a web browser, navigate to port 18090 on your Docker server.
+  * (e.g.) http://127.0.0.1:18090/
+
+```shell
+$ docker container stop quantum
+```
+
+---
+
+# Shared Storage
+
+```shell
+$ git clone https://github.com/spkane/docker-volumes-example.git \
+    --config core.autocrlf=input
+$ cd docker-volumes-example
+$ docker image build -t volumes .
+$ docker container run --rm \
+    mode=ingress,target=80,published=18080 volumes
+$ docker container run --rm \
+    --publish mode=ingress,target=80,published=18080 -v \
+    ${PWD}/volumes/single-file/1.jpg:/usr/local/apache2/htdocs/images/1.jpg \
+    volumes
+$ docker container run --rm \
+    --publish mode=ingress,target=80,published=18080 -v \
+    ${PWD}/volumes/directory:/usr/local/apache2/htdocs/images volumes
+```
+
+---
+
+# Re-Launching Your Container
+
+```shell
+$ docker container run -d --rm --name quantum \
+    --publish mode=ingress,target=8080,published=18080 \
+    spkane/quantum-game:latest
+```
+
+---
+
+# Accessing STDOUT/STDERR
+
+* Log everything to STDOUT / STDERR
+  * Avoid writing logs into file
+
+```shell
+$ docker container logs --help
+$ docker container logs -f quantum
+```
+
+* Reload the game in your web browser.
+  * (e.g.) http://127.0.0.1:18080/
+
+```shell
+$ docker container logs -t quantum
+```
+
+---
+
+# Statistics
+
+```shell
+$ docker container stats --help
+$ docker container run --rm -d --name stress spkane/train-os:latest \
+    stress -v --cpu 2 --io 1 --vm 2 \
+    --vm-bytes 128M --timeout 240s
+$ docker container stats stress
+$ docker container stats --no-stream stress
+$ docker container top stress
+```
+
+---
+
+# Statistics API
+
+* Try the API:
+
+```shell
+$ curl --no-buffer -XGET --unix-socket /var/run/docker.sock \
+    http://docker/containers/stress/stats
+```
+
+---
+
+# Events
+
+```shell
+$ docker container stop stress
+$ docker system events --help
+$ docker system events --since $(date +%Y%m%d)
+```
+
+* Try the API:
+
+```shell
+$ curl --no-buffer -XGET --unix-socket /var/run/docker.sock \
+    http://docker/events
+```
+
+---
+
+# Debugging a Live Container
+
+* If your container has a shell installed you can access it using a command like this:
+
+```shell
+$ docker container ls
+$ docker container exec -ti quantum /bin/sh
+# ps auxwww
+# exit
+```
+
+---
+
+# Linux Namespaces
+
+* Mount (filesystem resources)
+* UTS (host & domain name)
+* IPC (shared memory, semaphores)
+* PID (process tree)
+* Network (network layer)
+* User (user and group IDs)
+
+---
+
+# Control Groups (cgroups)
+
+* Resource limiting
+* Prioritization
+* Accounting
+* Control
+
+---
+
+# Stressing the System
+
+```shell
+$ docker container run --rm -ti spkane/train-os:latest stress \
+    -v --cpu 2 --io 1 --vm 2 --vm-bytes 128M --timeout 240s
+$ docker container run -it --pid=host spkane/alpine-base:latest sh
+# htop -p $(pgrep stress | tr '\n' ',')
+# exit
+```
+
+---
+
+# CPU Quotas
+
+```shell
+$ docker container run -d --cpus="2" spkane/train-os:latest stress \
+    -v --cpu 2 --io 1 --vm 2 --vm-bytes 128M --timeout 60s
+$ docker container run -d --cpus=".25" spkane/train-os:latest stress \
+    -v --cpu 2 --io 1 --vm 2 --vm-bytes 128M --timeout 60s
+$ docker container run -d --cpus="8" spkane/train-os:latest stress \
+    -v --cpu 2 --io 1 --vm 2 --vm-bytes 128M --timeout 60s
+```
+
+---
+
+# Memory Quotas
+
+```shell
+$ docker container run --rm -ti --memory="512m" spkane/train-os:latest \
+    stress -v --cpu 2 --io 1 --vm 2 \
+    --vm-bytes 128M --timeout 10s
+$ docker container run --rm -ti --memory="100m" spkane/train-os:latest \
+    stress -v --cpu 2 --io 1 --vm 2 \
+    --vm-bytes 128M --timeout 10s
+$ docker container run -it  --privileged --pid=host debian \
+    nsenter -t 1 -m -u -n -i sh
+# dmesg
+# exit
+```
+
+---
+
+# Timing commands in Windows
+
+* In the next exercise we will be timing commands using a Unix utility. If you are on Windows and want to try to time these commands locally, you can try something like this in Powershell.
+
+```powershell
+PS C:\> $t = Measure-Command `
+    { docker container run -ti --rm spkane/train-os:latest `
+    bonnie++ -u 500:500 -d /tmp -r 1024 -s 2048 -x 1 }
+PS C:\> Write-Host That command took $t.TotalSeconds to complete.
+```
+
+---
+
+# I/O Quotas
+
+```shell
+$ docker image pull spkane/train-os:latest
+$ time docker container run -ti --rm spkane/train-os:latest bonnie++ \
+    -u 500:500 -d /tmp -r 1024 -s 2048 -x 1
+$ time docker container run -ti --rm --device-write-iops /dev/vda:256 \
+    spkane/train-os:latest bonnie++ \
+    -u 500:500 -d /tmp -r 1024 -s 2048 -x 1
+$ time docker container run -ti --rm --device-write-bps /dev/vda:5mb \
+    spkane/train-os:latest bonnie++ \
+    -u 500:500 -d /tmp -r 1024 -s 2048 -x 1
+```
+
+---
+
+# Container UID
+
+```shell
+$ docker container run spkane/train-os:latest whoami
+$ docker container run -u 500 spkane/train-os:latest whoami
+$ docker container run -u 99 spkane/train-os:latest whoami
+$ docker container run -v /etc:/mnt/etc spkane/train-os:latest \
+    cat /mnt/etc/docker/key.json
+$ docker container run -v /etc:/mnt/etc -u 500 spkane/train-os:latest \
+    cat /mnt/etc/docker/key.json
+```
+
+* Further Exploration: --userns-remap
+  * https://docs.docker.com/engine/security/userns-remap/
+
+---
+
+# Privileged Containers
+
+* **Warning:** Don't try this example on your system.
+
+```shell
+$ docker container run --rm -ti spkane/train-os:latest /bin/bash
+# ip link ls
+# ip link set eth0 address 02:0a:03:0b:04:0c
+# exit
+$ docker container run --rm -ti --privileged=true \
+    spkane/train-os:latest /bin/bash
+# ip link ls
+# ip link set eth0 address 02:0a:03:0b:04:0c
+# ip link ls
+# exit
+```
+
+---
+
+# The Danger of Privileges
+
+```shell
+$ docker container run -ti --rm spkane/train-os:latest \
+    ntpdate 0.fedora.pool.ntp.org
+$ docker container run -ti --rm --privileged=true spkane/train-os:latest \
+    ntpdate 0.fedora.pool.ntp.org
+$ docker container run -ti --rm --privileged=true spkane/train-os:latest \
+    bash -c \
+    "mount /dev/vda1 /mnt && ls -F /mnt/docker/volumes | head -n 10"
+```
+
+---
+
+# Controlling Capabilities
+
+```shell
+$ docker container run -ti --rm --cap-add=SYS_TIME spkane/train-os:latest \
+    ntpdate 0.fedora.pool.ntp.org
+$ docker container run -ti --rm --cap-add=SYS_TIME spkane/train-os:latest \
+    bash -c \
+    "mount /dev/vda1 /mnt && ls -F /mnt/docker/volumes | head -n 10"
+$ docker container run -ti --rm spkane/train-os:latest tcpdump -i eth0
+$ docker container run -ti --rm --cap-drop=NET_RAW spkane/train-os:latest \
+    tcpdump -i eth0
+```
+
+---
+
+# Secure Computing Mode
+
+```shell
+$ docker container run -ti --rm --cap-drop=NET_RAW \
+    spkane/train-os:latest strace tcpdump -i eth0 \
+    | grep "Operation not permitted"
+$ wget \
+    https://raw.githubusercontent.com/spkane/train-os/master/default.json
+$ wget \
+    https://raw.githubusercontent.com/spkane/train-os/master/tcpdump.json
+$ diff -u default.json tcpdump.json
+$ docker container run -ti --rm --security-opt=seccomp:tcpdump.json \
+    spkane/train-os:latest tcpdump -i eth0
+```
+
+---
+
+# Capabilities & SECCOMP Mode
+
+* Linux Kernel Capabilities:
+  * http://man7.org/linux/man-pages/man7/capabilities.7.html
+* Secure Computing Mode (Docker)
+  * https://docs.docker.com/engine/security/seccomp/
+
+---
+
+# What We Have Learned
+
+* History of Containers
+* Container Logging
+* Container Statistics
+* Container Events
+* Debugging Containers
+* Kernel Functionality
+* Controlling Resource Usage
+* Improving Container Security
 
 ---
