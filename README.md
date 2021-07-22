@@ -864,6 +864,39 @@ $ docker container run -ti --rm --security-opt=seccomp:tcpdump.json \
     spkane/train-os:latest tcpdump -i eth0
 ```
 
+
+---
+# Networking
+```
+version: '3.8'
+services:
+  db:
+    container_name: pg_container
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: [USER]
+      POSTGRES_PASSWORD: [PASSWORD]
+      POSTGRES_DB: [DB_NAME]
+      POSTGRES_HOST_AUTH_METHOD: trust
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - '~/mount/postgres:/var/lib/postgresql/data'
+    network_mode: vkku-net
+  pgadmin:
+    container_name: pgadmin4_container
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: [EMAIL]
+      PGADMIN_DEFAULT_PASSWORD: [PASSWORD]
+    network_mode: vkku-net
+    ports:
+      - "5050:80"
+```
+
 ---
 
 # Capabilities & SECCOMP Mode
