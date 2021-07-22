@@ -868,6 +868,7 @@ $ docker container run -ti --rm --security-opt=seccomp:tcpdump.json \
 ---
 # Networking
 ```
+//Save this as docker-compose.yml and run `docker-compose up` in same directory
 version: '3.8'
 services:
   db:
